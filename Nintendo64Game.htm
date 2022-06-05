@@ -284,26 +284,25 @@
 						}
 					}
 
-			download_Blob(data, fileName, mimeType)
-				{
-				var blob, url;
-				blob = new Blob([data], {type: mimeType});
-				url = window.URL.createObjectURL(blob);
-				this.download_URL(url, fileName);
-				}
+				download_Blob(data, fileName, mimeType)
+					{
+					var blob, url;
+					blob = new Blob([data], {type: mimeType});
+					url = window.URL.createObjectURL(blob);
+					this.download_URL(url, fileName);
+					}
 
-			download_URL(data, fileName)
-				{
-				var a;
-				a = document.createElement("a");
-				a.href = data;
-				a.download = fileName;
-				document.body.appendChild(a);
-				a.style = "display: none";
-				a.click();
-				a.remove();
-				}
-
+				download_URL(data, fileName)
+					{
+					var a;
+					a = document.createElement("a");
+					a.href = data;
+					a.download = fileName;
+					document.body.appendChild(a);
+					a.style = "display: none";
+					a.click();
+					a.remove();
+					}
 				}
 
 			var myClass = new MyClass();
