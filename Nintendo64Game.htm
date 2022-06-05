@@ -216,6 +216,9 @@
 					// I THINK THIS METHOD IS THREAD SAFE BUT JUST IN CASE
 					if (this.audioThreadLock){return;}
 
+					// CHECKING IF THE EMULATOR SHOULD NOT BE RUNNING
+					if (Emulator_running==false){return;}
+
 					this.audioThreadLock = true;
 
 					var sampleRate = audioProcessingEvent.outputBuffer.sampleRate;
@@ -323,6 +326,29 @@
 			window["myApp"] = myClass; // SO THAT I CAN REFERENCE FROM EM_ASM
 			window["Module"] = { postRun: function(){setTimeout(function(){myClass.LoadEmulator(parent.ROMDATA);},1500);}, canvas: document.getElementById("canvas") }
 
+			window.addEventListener("blur", function()
+				{
+				try
+					{
+					// PAUSING THE EMULATION
+					Emulator_running = false;
+					}
+					catch(err)
+					{
+					}
+				});
+
+			window.addEventListener("focus", function()
+				{
+				try
+					{
+					// RESUMING THE EMULATION
+					Emulator_running = true;
+					}
+					catch(err)
+					{
+					}
+				});
 
 			// SETTING FUNCTIONS THAT WILL BE CALLED WHEN THE USER CLICKS, DOUBLE CLICKS OR MOVES THE MOUSE IN ORDER TO SHOW THE SYSTEM ICONS
 			document.addEventListener("click", parent.goBackButtonResetIncrement, false);
