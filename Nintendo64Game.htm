@@ -314,8 +314,11 @@
 					{
 					var compressed = FS.readFile("/savestate.gz"); // THIS IS A UINT8ARRAY
 
+					// GETTING THE ROM FILENAME WITHOUT THE EXTENSION
+					var fileName = parent.ROMNAME.replace(/\.[^/.]+$/, "");
+
 					// DOWNLOADING THE ROMSTATE AS A FILE
-					this.download_Blob(compressed, parent.ROMNAME + ".state", "application/octet-stream");
+					this.download_Blob(compressed, fileName + ".state", "application/octet-stream");
 
 					var request = indexedDB.open("N64WASMDB");
 					request.onsuccess = function (ev)
