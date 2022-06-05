@@ -81,20 +81,40 @@
 				var MOVEMENTS_IDLE = 0;
 
 				var userLanguage = window.navigator.userLanguage || window.navigator.language;
+
+				var STRING_SELECTGAME = "";
+				var STRING_LOADSTATE = "";
+				var STRING_SAVESTATE = "";
+				var STRING_GOBACK = "";
+				var STRING_RELOAD = "";
+				var STRING_SOUND = "";
 				var STRING_ERROR_TITLE = "";
 				var STRING_ERROR_MESSAGE = "";
 				var STRING_ERROR_OK = "";
 
+				// CHECKING THE USER LANGUAGE
 				if (userLanguage.substring(0,2)=="es")
 					{
+					STRING_SELECTGAME = "Seleccionar juego";
+					STRING_LOADSTATE = "Subir estado del juego";
+					STRING_SAVESTATE = "Descargar estado del juego";
+					STRING_GOBACK = "Volver al men" + String.fromCharCode(250) + " principal";
+					STRING_RELOAD = "Recargar juego";
+					STRING_SOUND = "Sonido en el juego";
 					STRING_ERROR_TITLE = "MENSAJE";
 					STRING_ERROR_MESSAGE = "Por favor verifique que el juego se encuentre en formato N64.";
 					STRING_ERROR_OK = "Aceptar";
 					}
 					else
 					{
+					STRING_SELECTGAME = "Select game";
+					STRING_LOADSTATE = "Upload game state";
+					STRING_SAVESTATE = "Download game state";
+					STRING_GOBACK = "Go back to the main menu";
+					STRING_RELOAD = "Reload game";
+					STRING_SOUND = "Game sound";
 					STRING_ERROR_TITLE = "MESSAGE";
-					STRING_ERROR_MESSAGE = "Please check that the game file is in N64 format.";
+					STRING_ERROR_MESSAGE = "Please check that the game file<br />is in N64 format.";
 					STRING_ERROR_OK = "OK";
 					}
 
@@ -369,6 +389,14 @@
 
 						// CLEARING THE NINTENDO 64 EMULATOR CONTAINER
 						document.getElementById("container").contentDocument.location.replace("about:blank");
+
+						// SETTING THE TITLES FOR EACH BUTTON
+						document.getElementsByClassName("gui_upload")[0].title = STRING_SELECTGAME;
+						document.getElementsByClassName("gui_goback")[0].title = STRING_GOBACK;
+						document.getElementById("gui_sound_handler").title = STRING_SOUND;
+						document.getElementsByClassName("gui_download")[0].title = STRING_SAVESTATE;
+						document.getElementsByClassName("gui_uploadsave")[0].title = STRING_LOADSTATE;
+						document.getElementsByClassName("gui_reload")[0].title = STRING_RELOAD;
 
 						// CHECKING IF THE SOUND IS ENABLED
 						if (GAME_SOUND_ENABLED==true)
