@@ -53,9 +53,6 @@
 					var extension = files[0].name.split(".").pop().toLowerCase();
 					if (extension=="state")
 						{
-						// SETTING THE UPLOADING PROCESS AS TRUE
-						upload_running = true;
-
 						// READING THE SELECTED FILE
 						var filereader = new FileReader();
 						filereader.file_name = files[0].name;
