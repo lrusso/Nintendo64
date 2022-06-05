@@ -89,6 +89,18 @@
 					}
 				}
 
+			function getSoundStatus()
+				{
+				try
+					{
+					return parent.getSoundStatus();
+					}
+					catch(err)
+					{
+					return true;
+					}
+				}
+
 			class MyClass
 				{
 				constructor()
@@ -243,20 +255,32 @@
 					// THE BYTES ARE ARRANGED L,R,L,R, ETC.... FOR EACH SPEAKER
 					for (var sample = 0; sample < AUDIOBUFFSIZE; sample++)
 						{
-						if (this.audioWritePosition != this.audioReadPosition)
+						// CHECKING IF THE SOUND IS ENABLED
+						if (getSoundStatus()==true)
 							{
-							outputData1[sample] = (this.audioBufferResampled[this.audioReadPosition] / 32768);
-							outputData2[sample] = (this.audioBufferResampled[this.audioReadPosition + 1] / 32768);
-
-							this.audioReadPosition += 2;
-
-							// WRAP BACK AROUND WITHIN THE RING BUFFER
-							if (this.audioReadPosition == 64000)
+							if (this.audioWritePosition != this.audioReadPosition)
 								{
-								this.audioReadPosition = 0;
+								outputData1[sample] = (this.audioBufferResampled[this.audioReadPosition] / 32768);
+								outputData2[sample] = (this.audioBufferResampled[this.audioReadPosition + 1] / 32768);
+
+								this.audioReadPosition += 2;
+
+								// WRAP BACK AROUND WITHIN THE RING BUFFER
+								if (this.audioReadPosition == 64000)
+									{
+									this.audioReadPosition = 0;
+									}
+								}
+							else
+								{
+								// IF THERE'S NOTHING TO PLAY THEN JUST PLAY SILENCE
+								outputData1[sample] = 0;
+								outputData2[sample] = 0;
+
+								hadSkip = true;
 								}
 							}
-						else
+							else
 							{
 							// IF THERE'S NOTHING TO PLAY THEN JUST PLAY SILENCE
 							outputData1[sample] = 0;
