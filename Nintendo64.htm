@@ -175,6 +175,18 @@
 						}
 					}
 
+				function reloadGame()
+					{
+					try
+						{
+						// RUNNING THE FUNCTION THAT IS LOCATED WITHIN THE IFRAME DOCUMENT TO RELOAD A GAME
+						document.getElementById("container").contentWindow.reloadGame();
+						}
+						catch(err)
+						{
+						}
+					}
+
 				function goBack()
 					{
 					try
@@ -287,6 +299,7 @@
 				document.getElementsByClassName("gui_goback")[0].addEventListener("click",function(event){goBack()});
 				document.getElementsByClassName("gui_download")[0].addEventListener("click",function(event){saveState()});
 				document.getElementsByClassName("gui_uploadsave")[0].addEventListener("click",function(event){loadState()});
+				document.getElementsByClassName("gui_reload")[0].addEventListener("click",function(event){reloadGame()});
 
 				window.addEventListener("load", function()
 					{
