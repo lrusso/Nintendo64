@@ -1,6 +1,6 @@
 # Nintendo 64
 
-Nintendo 64 emulator in Javascript.
+Nintendo 64 Emulator in Javascript.
 
 ![alt screenshot](https://raw.githubusercontent.com/lrusso/Nintendo64/main/Nintendo64.png)
 
