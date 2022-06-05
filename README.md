@@ -2,6 +2,7 @@
 
 Nintendo 64 emulator in Javascript.
 
+![alt screenshot](https://raw.githubusercontent.com/lrusso/Nintendo64/main/Nintendo64.png)
 
 ## Web:
 
