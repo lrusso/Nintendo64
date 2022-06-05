@@ -345,6 +345,26 @@
 					}
 				}
 
+			function detectEmulatorKey(e)
+				{
+				try
+					{
+					// GETTING THE KEY EVENT
+					e = e || window.event;
+
+					// CHECKING IF THE USER IS PRESSING THE EMULATOR MENU KEY
+					if (e.keyCode == 192 || e.keyCode == 0)
+						{
+						e.preventDefault();
+						e.stopPropagation();
+						e.stopImmediatePropagation();
+						}
+					}
+					catch(err)
+					{
+					}
+				}
+
 			var myClass = new MyClass();
 			window["myApp"] = myClass; // SO THAT I CAN REFERENCE FROM EM_ASM
 			window["Module"] = { postRun: function(){setTimeout(function(){myClass.LoadEmulator(parent.ROMDATA);},1500);}, canvas: document.getElementById("canvas") }
@@ -377,6 +397,11 @@
 			document.addEventListener("click", parent.goBackButtonResetIncrement, false);
 			document.addEventListener("dblclick", parent.goBackButtonResetIncrement, false);
 			document.addEventListener("mousemove", parent.goBackButtonResetIncrement, false);
+
+			// PREVENTING TO SHOW THE EMULATOR MENU
+			document.addEventListener("keydown",function(e){detectEmulatorKey(e)});
+			document.addEventListener("keypress",function(e){detectEmulatorKey(e)});
+			document.addEventListener("keyup", function(e){detectEmulatorKey(e)});
 
 			var script = document.createElement("script");
 			script.src = "Nintendo64Game.js";
