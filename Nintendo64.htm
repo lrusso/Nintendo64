@@ -149,6 +149,9 @@
 						// SHOWING THE GUI
 						document.getElementsByClassName("gui_container")[0].style.display = "block";
 
+						// HIDING THE GO BACK BUTTON
+						document.getElementsByClassName("gui_goback")[0].style.display = "none";
+
 						// UNLOADING THE NINTENDO 64 EMULATOR
 						document.getElementById("container").style.display = "none";
 						document.getElementById("container").contentDocument.location.replace("about:blank");
