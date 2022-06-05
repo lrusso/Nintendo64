@@ -89,18 +89,6 @@
 					}
 				}
 
-			function getSoundStatus()
-				{
-				try
-					{
-					return parent.getSoundStatus();
-					}
-					catch(err)
-					{
-					return true;
-					}
-				}
-
 			class MyClass
 				{
 				constructor()
@@ -256,7 +244,7 @@
 					for (var sample = 0; sample < AUDIOBUFFSIZE; sample++)
 						{
 						// CHECKING IF THE SOUND IS ENABLED
-						if (getSoundStatus()==true)
+						if (parent.getSoundStatus()==true)
 							{
 							if (this.audioWritePosition != this.audioReadPosition)
 								{
