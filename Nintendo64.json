@@ -1,0 +1,22 @@
+{
+	"name": "Nintendo 64",
+	"short_name": "Nintendo 64",
+	"lang": "en-US",
+	"start_url": "https://lrusso.github.io/Nintendo64/Nintendo64.htm",
+	"display": "standalone",
+	"orientation": "landscape",
+	"theme_color": "#000000",
+	"background_color": "#000000",
+	"icons": [
+		{
+			"src": "https://lrusso.github.io/Nintendo64/Nintendo64FavIcon_192x192.png",
+			"sizes": "192x192",
+			"type": "image/png"
+		},
+		{
+			"src": "https://lrusso.github.io/Nintendo64/Nintendo64FavIcon_512x512.png",
+			"sizes": "512x512",
+			"type": "image/png"
+		}
+	]
+}
