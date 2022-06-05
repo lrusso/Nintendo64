@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>Nintendo 64 Emulator</title>
+		<title>Nintendo 64</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<meta name="keywords" content="Nintendo 64 Emulator">
+		<meta name="keywords" content="Nintendo 64">
 		<meta charset="UTF-8">
 		<style>
 			html,body{padding:0;margin:0}
@@ -26,6 +26,7 @@
 				{
 				try
 					{
+					// CALLING THE EMSCRIPTEN FUNCTION TO SAVE THE STATE
 					Module._neil_serialize();
 					}
 					catch(err)
@@ -49,24 +50,32 @@
 				{
 				try
 					{
-					// CHECKING THE FILE EXTENSION
+					// GETTING THE FILE EXTENSION
 					var extension = files[0].name.split(".").pop().toLowerCase();
+
+					// CHECKING THE FILE EXTENSION
 					if (extension=="state")
 						{
-						// READING THE SELECTED FILE
+						// CREATING THE FILE READER
 						var filereader = new FileReader();
+
+						// GETTING THE FILENAME
 						filereader.file_name = files[0].name;
+
+						// SETTING THAT WILL HAPPEN WHEN THE FILE IS READ
 						filereader.onload = function()
 							{
 							// WRITING THE FILE STATE
 							FS.writeFile("/savestate.gz", new Uint8Array(this.result));
 
-							// LOADING THE FILE STATE
+							// CALLING THE EMSCRIPTEN FUNCTION TO LOAD THE STATE
 							Module._neil_unserialize();
 
 							// CLEARING THE SELECTED FILE VALUE
 							document.getElementById("fileupload_uploader").value = null;
 							};
+
+						// READING THE SELECTED FILE
 						filereader.readAsArrayBuffer(files[0]);
 						}
 					}
@@ -79,6 +88,7 @@
 				{
 				try
 					{
+					// CALLING THE EMSCRIPTEN FUNCTION TO RELOAD THE GAME
 					Module._neil_reset();
 					}
 					catch(err)
@@ -371,7 +381,6 @@
 			var script = document.createElement("script");
 			script.src = "Nintendo64Game.js";
 			document.getElementsByTagName("head")[0].appendChild(script);
-
 		</script>
 	</body>
 </html>
