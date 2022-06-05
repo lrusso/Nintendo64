@@ -151,6 +151,30 @@
 						}
 					}
 
+				function saveState()
+					{
+					try
+						{
+						// RUNNING THE FUNCTION THAT IS LOCATED WITHIN THE IFRAME DOCUMENT TO SAVE A STATE
+						document.getElementById("container").contentWindow.saveState();
+						}
+						catch(err)
+						{
+						}
+					}
+
+				function loadState()
+					{
+					try
+						{
+						// RUNNING THE FUNCTION THAT IS LOCATED WITHIN THE IFRAME DOCUMENT TO LOAD A STATE
+						document.getElementById("container").contentWindow.loadState();
+						}
+						catch(err)
+						{
+						}
+					}
+
 				function goBack()
 					{
 					try
@@ -261,6 +285,8 @@
 
 				// SETTING WHAT WILL HAPPEN WHEN THE USER CLICKS ON A ITEM
 				document.getElementsByClassName("gui_goback")[0].addEventListener("click",function(event){goBack()});
+				document.getElementsByClassName("gui_download")[0].addEventListener("click",function(event){saveState()});
+				document.getElementsByClassName("gui_uploadsave")[0].addEventListener("click",function(event){loadState()});
 
 				window.addEventListener("load", function()
 					{
