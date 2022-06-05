@@ -255,6 +255,12 @@
 			window["myApp"] = myClass; // SO THAT I CAN REFERENCE FROM EM_ASM
 			window["Module"] = { postRun: function(){setTimeout(function(){myClass.LoadEmulator(parent.ROMDATA);},1500);}, canvas: document.getElementById("canvas") }
 
+
+			// SETTING FUNCTIONS THAT WILL BE CALLED WHEN THE USER CLICKS, DOUBLE CLICKS OR MOVES THE MOUSE IN ORDER TO SHOW THE SYSTEM ICONS
+			document.addEventListener("click", parent.goBackButtonResetIncrement, false);
+			document.addEventListener("dblclick", parent.goBackButtonResetIncrement, false);
+			document.addEventListener("mousemove", parent.goBackButtonResetIncrement, false);
+
 			var script = document.createElement("script");
 			script.src = "Nintendo64Game.js";
 			document.getElementsByTagName("head")[0].appendChild(script);
