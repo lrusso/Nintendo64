@@ -9,6 +9,7 @@ https://lrusso.github.io/Nintendo64/Nintendo64.htm
 
 ## Main differences with N64Wasm:
 
+* Mute/unmute implementation.
 * Pausing/resuming on blur/focus.
 * Loading and saving states as files.
 
