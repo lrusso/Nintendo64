@@ -8,10 +8,12 @@
 		<style>
 			html,body{padding:0;margin:0}
 			canvas{width:100%;height:100%;position:fixed;left:0;right:0;bottom:0;top:0;z-index:-1}
+			.fileupload_uploader{display:none}
 		</style>
 	</head>
 	<body>
 		<canvas id="canvas"></canvas>
+		<input type="file" class="fileupload_uploader" id="fileupload_uploader" onchange="loadState_GetFile(event.target.files);" />
 		<script>
 			var Module = {};
 			var inputController;
@@ -23,7 +25,7 @@
 				{
 				try
 					{
-					myApp.saveStateLocal();
+					Module._neil_serialize();
 					}
 					catch(err)
 					{
@@ -34,7 +36,41 @@
 				{
 				try
 					{
-					myApp.loadStateLocal();
+					// ALLOWING THE USER TO SELECT THE ROMSTATE FILE FROM THE COMPUTER OR MOBILE DEVICE
+					document.getElementById("fileupload_uploader").click();
+					}
+					catch(err)
+					{
+					}
+				}
+
+			function loadState_GetFile(files)
+				{
+				try
+					{
+					// CHECKING THE FILE EXTENSION
+					var extension = files[0].name.split(".").pop().toLowerCase();
+					if (extension=="state")
+						{
+						// SETTING THE UPLOADING PROCESS AS TRUE
+						upload_running = true;
+
+						// READING THE SELECTED FILE
+						var filereader = new FileReader();
+						filereader.file_name = files[0].name;
+						filereader.onload = function()
+							{
+							// WRITING THE FILE STATE
+							FS.writeFile("/savestate.gz", new Uint8Array(this.result));
+
+							// LOADING THE FILE STATE
+							Module._neil_unserialize();
+
+							// CLEARING THE SELECTED FILE VALUE
+							document.getElementById("fileupload_uploader").value = null;
+							};
+						filereader.readAsArrayBuffer(files[0]);
+						}
 					}
 					catch(err)
 					{
@@ -227,28 +263,6 @@
 						}
 
 					this.audioThreadLock = false;
-					}
-
-				saveStateLocal()
-					{
-					Module._neil_serialize();
-					}
-
-				loadStateLocal()
-					{
-					var request = indexedDB.open("N64WASMDB");
-					request.onsuccess = function (ev)
-						{
-						var db = ev.target.result;
-						var romStore = db.transaction("N64WASMSTATES", "readwrite").objectStore("N64WASMSTATES");
-						var rom = romStore.get("custom.v64");
-						rom.onsuccess = function (event)
-							{
-							var byteArray = rom.result; // UINT8ARRAY
-							FS.writeFile("/savestate.gz",byteArray);
-							Module._neil_unserialize();
-							};
-						}
 					}
 
 				createDB()
