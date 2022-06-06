@@ -245,8 +245,6 @@
 
 					this.audioWritePosition = Module._neilGetAudioWritePosition();
 
-					var hadSkip = false;
-
 					// THE BYTES ARE ARRANGED L,R,L,R, ETC.... FOR EACH SPEAKER
 					for (var sample = 0; sample < AUDIOBUFFSIZE; sample++)
 						{
@@ -271,17 +269,24 @@
 								// IF THERE'S NOTHING TO PLAY THEN JUST PLAY SILENCE
 								outputData1[sample] = 0;
 								outputData2[sample] = 0;
-
-								hadSkip = true;
 								}
 							}
 							else
 							{
-							// IF THERE'S NOTHING TO PLAY THEN JUST PLAY SILENCE
+							if (this.audioWritePosition != this.audioReadPosition)
+								{
+								this.audioReadPosition += 2;
+
+								// WRAP BACK AROUND WITHIN THE RING BUFFER
+								if (this.audioReadPosition == 64000)
+									{
+									this.audioReadPosition = 0;
+									}
+								}
+
+							// PLAYING SILENCE
 							outputData1[sample] = 0;
 							outputData2[sample] = 0;
-
-							hadSkip = true;
 							}
 						}
 
