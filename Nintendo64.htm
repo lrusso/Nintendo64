@@ -52,6 +52,7 @@
 			.gui_upload:hover{filter:brightness(110%)}
 			.gui_controls{position:fixed;left:0;right:0;bottom:85px;z-index:99;text-align:center;line-height:2;font-family:Arial;font-size:16px;color:white}
 			.gui_controls_file{display:none}
+			.gui_controls_key{color:gray}
 
 			.body,.wrapper{position:absolute;top:0px;width:100%;height:100%;margin:0;overflow-y:hidden}
 			.body{z-index:1}
@@ -69,7 +70,7 @@
 			<div class="gui_reload"></div>
 			<div class="gui_container">
 				<div class="gui_background"></div>
-				<div class="gui_controls">Z = A&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;L = Q&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;R = E&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;B = S&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A = D<br/>CDOWN = K&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CUP = I&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CLEFT = J&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CRIGHT = L&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;START = ENTER</div>
+				<div class="gui_controls"><span class="gui_controls_key">ANALOG = </span>LEFT, RIGHT, UP, DOWN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="gui_controls_key">START = </span>ENTER<br/><span class="gui_controls_key">Z = </span>A&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="gui_controls_key">L = </span>Q&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="gui_controls_key">R = </span>W&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="gui_controls_key">B = </span>S&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="gui_controls_key">A = </span>D<br/><span class="gui_controls_key">LEFT = </span>F&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="gui_controls_key">RIGHT = </span>H&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="gui_controls_key">UP = </span>T&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="gui_controls_key">DOWN = </span>G&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="gui_controls_key">ACTIONS BUTTONS = </span>I, K, J, L<br/></div>
 				<div class="gui_email"><a href="mailto:info@lrusso.com">info@lrusso.com</a></div>
 				<div class="gui_upload"></div>
 				<input type="file" id="gui_controls_file" class="gui_controls_file" onchange="readFile(event.target.files);"/>
