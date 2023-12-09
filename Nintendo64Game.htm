@@ -8,6 +8,7 @@
 		<style>
 			html,body{padding:0;margin:0}
 			canvas{width:100%;height:100%;position:fixed;left:0;right:0;bottom:0;top:0;z-index:-1}
+			.game_star_wars_racer{left:-5%;width:110%;top:-5%;height:110%}
 			.fileupload_uploader{display:none}
 		</style>
 	</head>
@@ -110,6 +111,19 @@
 
 					// WRITING THE GAME ROM FILE
 					FS.writeFile("custom.v64", new Uint8Array(byteArray));
+
+					// CHECKING IF THE GAME IS STAR WARS EPISODE 1 RACER
+					if (/star.*wars.*racer.*n64/gi.test(parent.ROMNAME)==true)
+					//parent.ROMNAME == "Star Wars Episode I - Racer.n64")
+						{
+						// ADJUSTING CANVAS IN ORDER TO REMOVE THE BLACK BORDERS THAT THE GAME HAS
+						document.getElementsByTagName("canvas")[0].className = "game_star_wars_racer";
+						}
+						else
+						{
+						// REMOVING CUSTOM STYLE FOR OTHER GAMES
+						document.getElementsByTagName("canvas")[0].className = undefined;
+						}
 
 					// CREATING THE VARIABLE FOR THE GAME CONFIGURATION
 					var configString = "";
