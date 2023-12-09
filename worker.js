@@ -2,11 +2,13 @@ const filesToCache = [
 	"Nintendo64.htm",
 	"Nintendo64.json",
 	"Nintendo64.png",
+	"Nintendo64Emulator.htm",
+	"Nintendo64Emulator.json",
+	"Nintendo64Emulator.wasm",
 	"Nintendo64FavIcon_16x16.png",
 	"Nintendo64FavIcon_192x192.png",
 	"Nintendo64FavIcon_512x512.png",
-	"Nintendo64Game.htm",
-	"Nintendo64Game.js",
+	"Nintendo64Menu.htm",
 	"Nintendo64Share.png"
 ];
 
