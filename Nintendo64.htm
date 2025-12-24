@@ -339,7 +339,7 @@
 					configString += "0" + "\r\n";
 
 					// DISABLE AUDIO SYNC
-					configString += "0" + "\r\n";
+					configString += "1" + "\r\n";
 
 					// INVERT PLAYER Y AXIS
 					configString += "0" + "\r\n";
@@ -370,7 +370,13 @@
 					// STARTING THE EMULATOR
 					Module.callMain(["custom.v64"]);
 
-					this.setRemainingAudio = Module.cwrap('neil_set_buffer_remaining', null, ['number']);
+					// INITIALIZE AUDIO BUFFER NOW THAT MODULE MEMORY IS AVAILABLE
+					this.initAudioBuffer();
+
+					this.setRemainingAudio = Module.cwrap("neil_set_buffer_remaining", null, ["number"]);
+
+					// START THE EMULATOR LOOP USING SETTIMEOUT
+					this.startAudioLoop();
 					}
 
 				initAudio()
@@ -380,20 +386,53 @@
 					this.gainNode.gain.value = 0.5;
 					this.gainNode.connect(this.audioContext.destination);
 
-					// POINT AT WHERE THE EMULATOR IS STORING THE AUDIO BUFFER
-					this.audioBufferResampled = new Int16Array(Module.HEAP16.buffer,Module._neilGetSoundBufferResampledAddress(),64000);
+					// DEFER BUFFER SETUP UNTIL MODULE MEMORY IS AVAILABLE (SET IN INITAUDIOBUFFER)
+					this.audioBufferResampled = null;
 					this.audioWritePosition = 0;
 					this.audioReadPosition = 0;
 					this.audioBackOffCounter = 0;
 					this.audioThreadLock = false;
 
-					// EMULATOR IS SYNCED TO THE ONAUDIOPROCESS EVENT BECAUSE IT'S WAY
-					// MORE ACCURATE THAN EMSCRIPTEN_SET_MAIN_LOOP OR RAF
-					// AND THE OLD METHOD WAS HAVING CONSTANT EMULATOR SLOWDOWN SWINGS
-					// SO THE AUDIO SUFFERED AS A RESULT
-					this.pcmPlayer = this.audioContext.createScriptProcessor(AUDIOBUFFSIZE, 2, 2);
-					this.pcmPlayer.onaudioprocess = this.AudioProcessRecurring.bind(this);
-					this.pcmPlayer.connect(this.gainNode);
+					// EMULATOR IS SYNCED TO SETTIMEOUT EVERY 1MS
+					// REPLACING SCRIPTPROCESSORNODE WHICH IS DEPRECATED
+					this.audioLoopRunning = false;
+					this.nextAudioTime = 0;
+					}
+
+				// INITIALIZE AUDIO BUFFER AFTER MODULE MEMORY IS AVAILABLE (CALLED AFTER CALLMAIN)
+				initAudioBuffer()
+					{
+					if (this.audioBufferResampled === null)
+						{
+						// GET THE HEAP BUFFER - TRY DIFFERENT SOURCES FOR ASM.JS COMPATIBILITY
+						var heapBuffer = null;
+						if (Module.HEAPU8 && Module.HEAPU8.buffer)
+							{
+							heapBuffer = Module.HEAPU8.buffer;
+							}
+						else if (Module.HEAP16 && Module.HEAP16.buffer)
+							{
+							heapBuffer = Module.HEAP16.buffer;
+							}
+						else if (Module.buffer)
+							{
+							heapBuffer = Module.buffer;
+							}
+
+						if (heapBuffer)
+							{
+							var bufferAddress = Module._neilGetSoundBufferResampledAddress();
+							this.audioBufferResampled = new Int16Array(heapBuffer, bufferAddress, 64000);
+							}
+						}
+					}
+
+				// START THE EMULATOR LOOP USING SETTIMEOUT
+				startAudioLoop()
+					{
+					if (this.audioLoopRunning) return;
+					this.audioLoopRunning = true;
+					this.AudioProcessRecurring();
 					}
 
 				hasEnoughSamples()
@@ -423,70 +462,124 @@
 
 				// THIS METHOD KEEPS GETTING CALLED WHEN IT NEEDS MORE AUDIO
 				// DATA TO PLAY SO WE JUST KEEP STREAMING IT FROM THE EMULATOR
-				AudioProcessRecurring(audioProcessingEvent)
+				AudioProcessRecurring()
 					{
-					// I THINK THIS METHOD IS THREAD SAFE BUT JUST IN CASE
-					if (this.audioThreadLock){return;}
+					// SCHEDULE NEXT ITERATION
+					if (this.audioLoopRunning)
+						{
+						setTimeout(() => this.AudioProcessRecurring(), 1);
+						}
 
-					// CHECKING IF THE EMULATOR SHOULD NOT BE RUNNING
-					if (Emulator_running==false){return;}
+					// TRY TO INITIALIZE AUDIO BUFFER IF NOT DONE YET
+					if (this.audioBufferResampled === null)
+						{
+						// FOR ASM.JS, CHECK BOTH HEAPU8 AND HEAP16
+						var hasHeap = Module.HEAPU8 || Module.HEAP16 || Module.buffer;
+						if (hasHeap)
+							{
+							this.initAudioBuffer();
+							}
+						}
+
+					// I THINK THIS METHOD IS THREAD SAFE BUT JUST IN CASE
+					if (this.audioThreadLock || Emulator_running === false || this.audioBufferResampled === null)
+						{
+						return;
+						}
 
 					this.audioThreadLock = true;
 
-					var sampleRate = audioProcessingEvent.outputBuffer.sampleRate;
-					var outputBuffer = audioProcessingEvent.outputBuffer;
-					var outputData1 = outputBuffer.getChannelData(0);
-					var outputData2 = outputBuffer.getChannelData(1);
-
-					Module._runMainLoop();
-
 					this.audioWritePosition = Module._neilGetAudioWritePosition();
 
-					if (!this.hasEnoughSamples())
+					// ONLY PLAY FIRST 100MS OF AUDIO (4410 SAMPLES AT 44100 HZ)
+					var maxSamples = 4410;
+					var samplesAvailable = 0;
+					var readPositionCheck = this.audioReadPosition;
+
+					// COUNT AVAILABLE SAMPLES (UP TO 100MS)
+					while (this.audioWritePosition != readPositionCheck && samplesAvailable < maxSamples)
 						{
-						Module._runMainLoop();
+						samplesAvailable++;
+						readPositionCheck += 2;
+						if (readPositionCheck == 64000)
+							{
+							readPositionCheck = 0;
+							}
 						}
 
-					this.audioWritePosition = Module._neilGetAudioWritePosition();
-
-					// THE BYTES ARE ARRANGED L,R,L,R, ETC.... FOR EACH SPEAKER
-					for (let sample = 0; sample < AUDIOBUFFSIZE; sample++)
+					if (samplesAvailable > 0)
 						{
-						if (this.audioWritePosition != this.audioReadPosition)
+						// CREATE AN AUDIO BUFFER FOR PLAYBACK
+						var audioBuffer = this.audioContext.createBuffer(2, samplesAvailable, this.audioContext.sampleRate);
+						var outputData1 = audioBuffer.getChannelData(0);
+						var outputData2 = audioBuffer.getChannelData(1);
+
+						// FILL THE BUFFER WITH SAMPLES
+						for (var sample = 0; sample < samplesAvailable; sample++)
 							{
-							if (GAME_SOUND_ENABLED == true)
+							if (this.audioWritePosition != this.audioReadPosition)
 								{
-								outputData1[sample] = (this.audioBufferResampled[this.audioReadPosition] / 32768);
-								outputData2[sample] = (this.audioBufferResampled[this.audioReadPosition + 1] / 32768);
-								}
-							else
-								{
-								outputData1[sample] = 0;
-								outputData2[sample] = 0;
-								}
+								if (GAME_SOUND_ENABLED === true)
+									{
+									outputData1[sample] = this.audioBufferResampled[this.audioReadPosition] / 32768;
+									outputData2[sample] = this.audioBufferResampled[this.audioReadPosition + 1] / 32768;
+									}
+								else
+									{
+									outputData1[sample] = 0;
+									outputData2[sample] = 0;
+									}
 
+								this.audioReadPosition += 2;
+
+								// WRAP BACK AROUND WITHIN THE RING BUFFER
+								if (this.audioReadPosition == 64000)
+									{
+									this.audioReadPosition = 0;
+									}
+								}
+							}
+
+						// DISCARD REMAINING SAMPLES BEYOND 100MS
+						while (this.audioWritePosition != this.audioReadPosition)
+							{
 							this.audioReadPosition += 2;
-
-							// WRAP BACK AROUND WITHIN THE RING BUFFER
 							if (this.audioReadPosition == 64000)
 								{
 								this.audioReadPosition = 0;
 								}
 							}
-							else
+
+						// SCHEDULE AUDIO TO PLAY SEAMLESSLY AFTER PREVIOUS CHUNK
+						var currentTime = this.audioContext.currentTime;
+
+						// IF AUDIO IS TOO FAR AHEAD (>150MS LATENCY), RESET TO PREVENT DELAY BUILDUP
+						if (this.nextAudioTime > currentTime + 0.15)
 							{
-							// IF THERE'S NOTHING TO PLAY THEN JUST PLAY SILENCE
-							outputData1[sample] = 0;
-							outputData2[sample] = 0;
+							this.nextAudioTime = currentTime;
 							}
+
+						// IF WE'VE FALLEN BEHIND, CATCH UP
+						if (this.nextAudioTime < currentTime)
+							{
+							this.nextAudioTime = currentTime;
+							}
+
+						var source = this.audioContext.createBufferSource();
+						source.buffer = audioBuffer;
+						source.connect(this.gainNode);
+						source.start(this.nextAudioTime);
+
+						// SCHEDULE NEXT CHUNK RIGHT AFTER THIS ONE ENDS
+						this.nextAudioTime += audioBuffer.duration;
 						}
 
 					// CALCULATE REMAINING AUDIO IN BUFFER
-					let audioBufferRemaining = 0;
-					let readPositionTemp = this.audioReadPosition;
-					let writePositionTemp = this.audioWritePosition;
+					var audioBufferRemaining = 0;
+					var readPositionTemp = this.audioReadPosition;
+					var writePositionTemp = this.audioWritePosition;
 
-					for(let i = 0; i < 64000; i++)
+					for (var i = 0; i < 64000; i++)
 						{
 						if (readPositionTemp != writePositionTemp)
 							{
@@ -514,14 +607,6 @@
 
 					// DOWNLOADING THE ROMSTATE AS A FILE
 					this.download_Blob(compressed, fileName + ".state", "application/octet-stream");
-
-					var request = indexedDB.open("N64WASMDB");
-					request.onsuccess = function (ev)
-						{
-						var db = ev.target.result;
-						var romStore = db.transaction("N64WASMSTATES", "readwrite").objectStore("N64WASMSTATES");
-						var addRequest = romStore.put(compressed, "custom.v64");
-						}
 					}
 
 				download_Blob(data, fileName, mimeType)
