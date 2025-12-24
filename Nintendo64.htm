@@ -81,7 +81,7 @@
 				STRING_RELOAD = "Recargar juego";
 				STRING_SOUND = "Sonido en el juego";
 				STRING_ERROR_TITLE = "MENSAJE";
-				STRING_ERROR_MESSAGE = "Por favor verifique que el juego se encuentre en formato N64.";
+				STRING_ERROR_MESSAGE = "Por favor verifique que el juego se encuentre en formato N64 o Z64.";
 				STRING_ERROR_OK = "Aceptar";
 				}
 			else
@@ -93,7 +93,7 @@
 				STRING_RELOAD = "Reload game";
 				STRING_SOUND = "Game sound";
 				STRING_ERROR_TITLE = "MESSAGE";
-				STRING_ERROR_MESSAGE = "Please check that the game file<br>is in N64 format.";
+				STRING_ERROR_MESSAGE = "Please check that the game file<br>is in N64 or Z64 format.";
 				STRING_ERROR_OK = "OK";
 				}
 
@@ -114,7 +114,7 @@
 					var extension = files[0].name.split(".").pop().toLowerCase();
 
 					// CHECKING THE FILE EXTENSION
-					if (extension=="n64")
+					if (extension=="n64" || extension=="z64")
 						{
 						// CREATING THE FILE READER
 						var filereader = new FileReader();
