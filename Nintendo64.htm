@@ -257,378 +257,377 @@
 					}
 				}
 
-			class MyClass
+			function MyClass()
 				{
-				constructor()
+				var Module = {};
+				Module["canvas"] = document.getElementById("canvas");
+				window["Module"] = Module;
+				}
+
+			MyClass.prototype.LoadEmulator = function(byteArray)
+				{
+				// WRITING THE ASSETS ZIP FILE
+				FS.writeFile("assets.zip", new Uint8Array(base64ToArrayBuffer(assetsZip)));
+
+				// WRITING THE GAME ROM FILE
+				FS.writeFile("custom.v64", new Uint8Array(byteArray));
+
+				// CHECKING IF THE GAME IS STAR WARS EPISODE 1 RACER
+				if (/star.*wars.*racer.*n64/gi.test(ROMNAME)==true)
 					{
-					var Module = {};
-					Module["canvas"] = document.getElementById("canvas");
-					window["Module"] = Module;
+					// ADJUSTING CANVAS IN ORDER TO REMOVE THE BLACK BORDERS THAT THE GAME HAS
+					document.getElementsByTagName("canvas")[0].className = "game_star_wars_racer";
+					}
+					else
+					{
+					// REMOVING CUSTOM STYLE FOR OTHER GAMES
+					document.getElementsByTagName("canvas")[0].className = undefined;
 					}
 
-				LoadEmulator(byteArray)
+				// CREATING THE VARIABLE FOR THE GAME CONFIGURATION
+				var configString = "";
+
+				// GAMEPAD
+				configString += "0" + "\r\n";					// Joy_Mapping_Up
+				configString += "0" + "\r\n";					// Joy_Mapping_Down
+				configString += "0" + "\r\n";					// Joy_Mapping_Left
+				configString += "0" + "\r\n";					// Joy_Mapping_Right
+				configString += "0" + "\r\n";					// Joy_Mapping_Action_A
+				configString += "0" + "\r\n";					// Joy_Mapping_Action_B
+				configString += "0" + "\r\n";					// Joy_Mapping_Action_Start
+				configString += "0" + "\r\n";					// Joy_Mapping_Action_Z
+				configString += "0" + "\r\n";					// Joy_Mapping_Action_L
+				configString += "0" + "\r\n";					// Joy_Mapping_Action_R
+				configString += "0" + "\r\n";					// Joy_Mapping_Menu
+				configString += "0" + "\r\n";					// Joy_Mapping_Menu
+				configString += "0" + "\r\n";					// Joy_Mapping_Menu
+				configString += "0" + "\r\n";					// Joy_Mapping_Menu
+				configString += "0" + "\r\n";					// Joy_Mapping_Menu
+
+				// KEYBOARD
+				configString += "f" + "\r\n";					// Mapping_Left
+				configString += "h" + "\r\n";					// Mapping_Right
+				configString += "t" + "\r\n";					// Mapping_Up
+				configString += "g" + "\r\n";					// Mapping_Down
+				configString += "Enter" + "\r\n";				// Mapping_Action_Start
+				configString += "i" + "\r\n";					// Mapping_Action_CUP
+				configString += "k" + "\r\n";					// Mapping_Action_CDOWN
+				configString += "j" + "\r\n";					// Mapping_Action_CLEFT
+				configString += "l" + "\r\n";					// Mapping_Action_CRIGHT
+				configString += "a" + "\r\n";					// Mapping_Action_Z
+				configString += "q" + "\r\n";					// Mapping_Action_L
+				configString += "w" + "\r\n";					// Mapping_Action_R
+				configString += "s" + "\r\n";					// Mapping_Action_B
+				configString += "d" + "\r\n";					// Mapping_Action_A
+				configString += "`" + "\r\n";					// Mapping_Menu
+				configString += "ArrowUp" + "\r\n";				// Mapping_Action_Analog_Up
+				configString += "ArrowDown" + "\r\n";			// Mapping_Action_Analog_Down
+				configString += "ArrowLeft" + "\r\n";			// Mapping_Action_Analog_Left
+				configString += "ArrowRight" + "\r\n";			// Mapping_Action_Analog_Right
+
+				// LOAD SAVE FILES
+				configString += "0" + "\r\n";
+				configString += "0" + "\r\n";
+				configString += "0" + "\r\n";
+
+				// SHOW FPS
+				configString += "0" + "\r\n";
+
+				// SWAP STICKS
+				configString += "0" + "\r\n";
+
+				// DISABLE AUDIO SYNC
+				configString += "1" + "\r\n";
+
+				// INVERT PLAYER Y AXIS
+				configString += "0" + "\r\n";
+				configString += "0" + "\r\n";
+				configString += "0" + "\r\n";
+
+				// MOBILE MODE
+				configString += "0" + "\r\n";
+
+				// ANGRYLION SOFTWARE RENDERER
+				configString += "0" + "\r\n";
+
+				// MOUSE MODE
+				configString += "0" + "\r\n";
+
+				// USE VBO
+				configString += "0" + "\r\n";
+
+				// RICE PLUGIN
+				configString += "0" + "\r\n";
+
+				// WRITING THE CONFIGURATION FILE
+				FS.writeFile("config.txt", configString);
+
+				// INITIALIZING THE AUDIO
+				this.initAudio();
+
+				// STARTING THE EMULATOR
+				Module.callMain(["custom.v64"]);
+
+				// INITIALIZE AUDIO BUFFER NOW THAT MODULE MEMORY IS AVAILABLE
+				this.initAudioBuffer();
+
+				this.setRemainingAudio = Module.cwrap("neil_set_buffer_remaining", null, ["number"]);
+
+				// START THE EMULATOR LOOP USING SETTIMEOUT
+				this.startAudioLoop();
+				};
+
+			MyClass.prototype.initAudio = function()
+				{
+				this.audioContext = new AudioContext({ latencyHint: "interactive", sampleRate: 44100 });
+				this.gainNode = this.audioContext.createGain();
+				this.gainNode.gain.value = 0.5;
+				this.gainNode.connect(this.audioContext.destination);
+
+				// DEFER BUFFER SETUP UNTIL MODULE MEMORY IS AVAILABLE (SET IN INITAUDIOBUFFER)
+				this.audioBufferResampled = null;
+				this.audioWritePosition = 0;
+				this.audioReadPosition = 0;
+				this.audioBackOffCounter = 0;
+				this.audioThreadLock = false;
+
+				// EMULATOR IS SYNCED TO SETTIMEOUT EVERY 1MS
+				// REPLACING SCRIPTPROCESSORNODE WHICH IS DEPRECATED
+				this.audioLoopRunning = false;
+				this.nextAudioTime = 0;
+				};
+
+			// INITIALIZE AUDIO BUFFER AFTER MODULE MEMORY IS AVAILABLE (CALLED AFTER CALLMAIN)
+			MyClass.prototype.initAudioBuffer = function()
+				{
+				if (this.audioBufferResampled === null)
 					{
-					// WRITING THE ASSETS ZIP FILE
-					FS.writeFile("assets.zip", new Uint8Array(base64ToArrayBuffer(assetsZip)));
-
-					// WRITING THE GAME ROM FILE
-					FS.writeFile("custom.v64", new Uint8Array(byteArray));
-
-					// CHECKING IF THE GAME IS STAR WARS EPISODE 1 RACER
-					if (/star.*wars.*racer.*n64/gi.test(ROMNAME)==true)
+					// GET THE HEAP BUFFER - TRY DIFFERENT SOURCES FOR ASM.JS COMPATIBILITY
+					var heapBuffer = null;
+					if (Module.HEAPU8 && Module.HEAPU8.buffer)
 						{
-						// ADJUSTING CANVAS IN ORDER TO REMOVE THE BLACK BORDERS THAT THE GAME HAS
-						document.getElementsByTagName("canvas")[0].className = "game_star_wars_racer";
+						heapBuffer = Module.HEAPU8.buffer;
+						}
+					else if (Module.HEAP16 && Module.HEAP16.buffer)
+						{
+						heapBuffer = Module.HEAP16.buffer;
+						}
+					else if (Module.buffer)
+						{
+						heapBuffer = Module.buffer;
+						}
+
+					if (heapBuffer)
+						{
+						var bufferAddress = Module._neilGetSoundBufferResampledAddress();
+						this.audioBufferResampled = new Int16Array(heapBuffer, bufferAddress, 64000);
+						}
+					}
+				};
+
+			// START THE EMULATOR LOOP USING SETTIMEOUT
+			MyClass.prototype.startAudioLoop = function()
+				{
+				if (this.audioLoopRunning) return;
+				this.audioLoopRunning = true;
+				this.AudioProcessRecurring();
+				};
+
+			MyClass.prototype.hasEnoughSamples = function()
+				{
+				var readPositionTemp = this.audioReadPosition;
+				var enoughSamples = true;
+				for (var sample = 0; sample < AUDIOBUFFSIZE; sample++)
+					{
+					if (this.audioWritePosition != readPositionTemp)
+						{
+						readPositionTemp += 2;
+
+						// WRAP BACK AROUND WITHIN THE RING BUFFER
+						if (readPositionTemp == 64000)
+							{
+							readPositionTemp = 0;
+							}
 						}
 						else
 						{
-						// REMOVING CUSTOM STYLE FOR OTHER GAMES
-						document.getElementsByTagName("canvas")[0].className = undefined;
-						}
-
-					// CREATING THE VARIABLE FOR THE GAME CONFIGURATION
-					var configString = "";
-
-					// GAMEPAD
-					configString += "0" + "\r\n";					// Joy_Mapping_Up
-					configString += "0" + "\r\n";					// Joy_Mapping_Down
-					configString += "0" + "\r\n";					// Joy_Mapping_Left
-					configString += "0" + "\r\n";					// Joy_Mapping_Right
-					configString += "0" + "\r\n";					// Joy_Mapping_Action_A
-					configString += "0" + "\r\n";					// Joy_Mapping_Action_B
-					configString += "0" + "\r\n";					// Joy_Mapping_Action_Start
-					configString += "0" + "\r\n";					// Joy_Mapping_Action_Z
-					configString += "0" + "\r\n";					// Joy_Mapping_Action_L
-					configString += "0" + "\r\n";					// Joy_Mapping_Action_R
-					configString += "0" + "\r\n";					// Joy_Mapping_Menu
-					configString += "0" + "\r\n";					// Joy_Mapping_Menu
-					configString += "0" + "\r\n";					// Joy_Mapping_Menu
-					configString += "0" + "\r\n";					// Joy_Mapping_Menu
-					configString += "0" + "\r\n";					// Joy_Mapping_Menu
-
-					// KEYBOARD
-					configString += "f" + "\r\n";					// Mapping_Left
-					configString += "h" + "\r\n";					// Mapping_Right
-					configString += "t" + "\r\n";					// Mapping_Up
-					configString += "g" + "\r\n";					// Mapping_Down
-					configString += "Enter" + "\r\n";				// Mapping_Action_Start
-					configString += "i" + "\r\n";					// Mapping_Action_CUP
-					configString += "k" + "\r\n";					// Mapping_Action_CDOWN
-					configString += "j" + "\r\n";					// Mapping_Action_CLEFT
-					configString += "l" + "\r\n";					// Mapping_Action_CRIGHT
-					configString += "a" + "\r\n";					// Mapping_Action_Z
-					configString += "q" + "\r\n";					// Mapping_Action_L
-					configString += "w" + "\r\n";					// Mapping_Action_R
-					configString += "s" + "\r\n";					// Mapping_Action_B
-					configString += "d" + "\r\n";					// Mapping_Action_A
-					configString += "`" + "\r\n";					// Mapping_Menu
-					configString += "ArrowUp" + "\r\n";				// Mapping_Action_Analog_Up
-					configString += "ArrowDown" + "\r\n";			// Mapping_Action_Analog_Down
-					configString += "ArrowLeft" + "\r\n";			// Mapping_Action_Analog_Left
-					configString += "ArrowRight" + "\r\n";			// Mapping_Action_Analog_Right
-
-					// LOAD SAVE FILES
-					configString += "0" + "\r\n";
-					configString += "0" + "\r\n";
-					configString += "0" + "\r\n";
-
-					// SHOW FPS
-					configString += "0" + "\r\n";
-
-					// SWAP STICKS
-					configString += "0" + "\r\n";
-
-					// DISABLE AUDIO SYNC
-					configString += "1" + "\r\n";
-
-					// INVERT PLAYER Y AXIS
-					configString += "0" + "\r\n";
-					configString += "0" + "\r\n";
-					configString += "0" + "\r\n";
-
-					// MOBILE MODE
-					configString += "0" + "\r\n";
-
-					// ANGRYLION SOFTWARE RENDERER
-					configString += "0" + "\r\n";
-
-					// MOUSE MODE
-					configString += "0" + "\r\n";
-
-					// USE VBO
-					configString += "0" + "\r\n";
-
-					// RICE PLUGIN
-					configString += "0" + "\r\n";
-
-					// WRITING THE CONFIGURATION FILE
-					FS.writeFile("config.txt", configString);
-
-					// INITIALIZING THE AUDIO
-					this.initAudio();
-
-					// STARTING THE EMULATOR
-					Module.callMain(["custom.v64"]);
-
-					// INITIALIZE AUDIO BUFFER NOW THAT MODULE MEMORY IS AVAILABLE
-					this.initAudioBuffer();
-
-					this.setRemainingAudio = Module.cwrap("neil_set_buffer_remaining", null, ["number"]);
-
-					// START THE EMULATOR LOOP USING SETTIMEOUT
-					this.startAudioLoop();
-					}
-
-				initAudio()
-					{
-					this.audioContext = new AudioContext({ latencyHint: "interactive", sampleRate: 44100 });
-					this.gainNode = this.audioContext.createGain();
-					this.gainNode.gain.value = 0.5;
-					this.gainNode.connect(this.audioContext.destination);
-
-					// DEFER BUFFER SETUP UNTIL MODULE MEMORY IS AVAILABLE (SET IN INITAUDIOBUFFER)
-					this.audioBufferResampled = null;
-					this.audioWritePosition = 0;
-					this.audioReadPosition = 0;
-					this.audioBackOffCounter = 0;
-					this.audioThreadLock = false;
-
-					// EMULATOR IS SYNCED TO SETTIMEOUT EVERY 1MS
-					// REPLACING SCRIPTPROCESSORNODE WHICH IS DEPRECATED
-					this.audioLoopRunning = false;
-					this.nextAudioTime = 0;
-					}
-
-				// INITIALIZE AUDIO BUFFER AFTER MODULE MEMORY IS AVAILABLE (CALLED AFTER CALLMAIN)
-				initAudioBuffer()
-					{
-					if (this.audioBufferResampled === null)
-						{
-						// GET THE HEAP BUFFER - TRY DIFFERENT SOURCES FOR ASM.JS COMPATIBILITY
-						var heapBuffer = null;
-						if (Module.HEAPU8 && Module.HEAPU8.buffer)
-							{
-							heapBuffer = Module.HEAPU8.buffer;
-							}
-						else if (Module.HEAP16 && Module.HEAP16.buffer)
-							{
-							heapBuffer = Module.HEAP16.buffer;
-							}
-						else if (Module.buffer)
-							{
-							heapBuffer = Module.buffer;
-							}
-
-						if (heapBuffer)
-							{
-							var bufferAddress = Module._neilGetSoundBufferResampledAddress();
-							this.audioBufferResampled = new Int16Array(heapBuffer, bufferAddress, 64000);
-							}
+						enoughSamples = false;
 						}
 					}
 
-				// START THE EMULATOR LOOP USING SETTIMEOUT
-				startAudioLoop()
+				return enoughSamples;
+				};
+
+			// THIS METHOD KEEPS GETTING CALLED WHEN IT NEEDS MORE AUDIO
+			// DATA TO PLAY SO WE JUST KEEP STREAMING IT FROM THE EMULATOR
+			MyClass.prototype.AudioProcessRecurring = function()
+				{
+				var self = this;
+
+				// SCHEDULE NEXT ITERATION
+				if (this.audioLoopRunning)
 					{
-					if (this.audioLoopRunning) return;
-					this.audioLoopRunning = true;
-					this.AudioProcessRecurring();
+					setTimeout(function() { self.AudioProcessRecurring(); }, 1);
 					}
 
-				hasEnoughSamples()
+				// TRY TO INITIALIZE AUDIO BUFFER IF NOT DONE YET
+				if (this.audioBufferResampled === null)
 					{
-					var readPositionTemp = this.audioReadPosition;
-					var enoughSamples = true;
-					for (var sample = 0; sample < AUDIOBUFFSIZE; sample++)
+					// FOR ASM.JS, CHECK BOTH HEAPU8 AND HEAP16
+					var hasHeap = Module.HEAPU8 || Module.HEAP16 || Module.buffer;
+					if (hasHeap)
 						{
-						if (this.audioWritePosition != readPositionTemp)
+						this.initAudioBuffer();
+						}
+					}
+
+				// I THINK THIS METHOD IS THREAD SAFE BUT JUST IN CASE
+				if (this.audioThreadLock || Emulator_running === false || this.audioBufferResampled === null)
+					{
+					return;
+					}
+
+				this.audioThreadLock = true;
+
+				this.audioWritePosition = Module._neilGetAudioWritePosition();
+
+				// ONLY PLAY FIRST 100MS OF AUDIO (4410 SAMPLES AT 44100 HZ)
+				var maxSamples = 4410;
+				var samplesAvailable = 0;
+				var readPositionCheck = this.audioReadPosition;
+
+				// COUNT AVAILABLE SAMPLES (UP TO 100MS)
+				while (this.audioWritePosition != readPositionCheck && samplesAvailable < maxSamples)
+					{
+					samplesAvailable++;
+					readPositionCheck += 2;
+					if (readPositionCheck == 64000)
+						{
+						readPositionCheck = 0;
+						}
+					}
+
+				if (samplesAvailable > 0)
+					{
+					// CREATE AN AUDIO BUFFER FOR PLAYBACK
+					var audioBuffer = this.audioContext.createBuffer(2, samplesAvailable, this.audioContext.sampleRate);
+					var outputData1 = audioBuffer.getChannelData(0);
+					var outputData2 = audioBuffer.getChannelData(1);
+
+					// FILL THE BUFFER WITH SAMPLES
+					for (var sample = 0; sample < samplesAvailable; sample++)
+						{
+						if (this.audioWritePosition != this.audioReadPosition)
 							{
-							readPositionTemp += 2;
+							if (GAME_SOUND_ENABLED === true)
+								{
+								outputData1[sample] = this.audioBufferResampled[this.audioReadPosition] / 32768;
+								outputData2[sample] = this.audioBufferResampled[this.audioReadPosition + 1] / 32768;
+								}
+							else
+								{
+								outputData1[sample] = 0;
+								outputData2[sample] = 0;
+								}
+
+							this.audioReadPosition += 2;
 
 							// WRAP BACK AROUND WITHIN THE RING BUFFER
-							if (readPositionTemp == 64000)
-								{
-								readPositionTemp = 0;
-								}
-							}
-							else
-							{
-							enoughSamples = false;
-							}
-						}
-
-					return enoughSamples;
-					}
-
-				// THIS METHOD KEEPS GETTING CALLED WHEN IT NEEDS MORE AUDIO
-				// DATA TO PLAY SO WE JUST KEEP STREAMING IT FROM THE EMULATOR
-				AudioProcessRecurring()
-					{
-					// SCHEDULE NEXT ITERATION
-					if (this.audioLoopRunning)
-						{
-						setTimeout(() => this.AudioProcessRecurring(), 1);
-						}
-
-					// TRY TO INITIALIZE AUDIO BUFFER IF NOT DONE YET
-					if (this.audioBufferResampled === null)
-						{
-						// FOR ASM.JS, CHECK BOTH HEAPU8 AND HEAP16
-						var hasHeap = Module.HEAPU8 || Module.HEAP16 || Module.buffer;
-						if (hasHeap)
-							{
-							this.initAudioBuffer();
-							}
-						}
-
-					// I THINK THIS METHOD IS THREAD SAFE BUT JUST IN CASE
-					if (this.audioThreadLock || Emulator_running === false || this.audioBufferResampled === null)
-						{
-						return;
-						}
-
-					this.audioThreadLock = true;
-
-					this.audioWritePosition = Module._neilGetAudioWritePosition();
-
-					// ONLY PLAY FIRST 100MS OF AUDIO (4410 SAMPLES AT 44100 HZ)
-					var maxSamples = 4410;
-					var samplesAvailable = 0;
-					var readPositionCheck = this.audioReadPosition;
-
-					// COUNT AVAILABLE SAMPLES (UP TO 100MS)
-					while (this.audioWritePosition != readPositionCheck && samplesAvailable < maxSamples)
-						{
-						samplesAvailable++;
-						readPositionCheck += 2;
-						if (readPositionCheck == 64000)
-							{
-							readPositionCheck = 0;
-							}
-						}
-
-					if (samplesAvailable > 0)
-						{
-						// CREATE AN AUDIO BUFFER FOR PLAYBACK
-						var audioBuffer = this.audioContext.createBuffer(2, samplesAvailable, this.audioContext.sampleRate);
-						var outputData1 = audioBuffer.getChannelData(0);
-						var outputData2 = audioBuffer.getChannelData(1);
-
-						// FILL THE BUFFER WITH SAMPLES
-						for (var sample = 0; sample < samplesAvailable; sample++)
-							{
-							if (this.audioWritePosition != this.audioReadPosition)
-								{
-								if (GAME_SOUND_ENABLED === true)
-									{
-									outputData1[sample] = this.audioBufferResampled[this.audioReadPosition] / 32768;
-									outputData2[sample] = this.audioBufferResampled[this.audioReadPosition + 1] / 32768;
-									}
-								else
-									{
-									outputData1[sample] = 0;
-									outputData2[sample] = 0;
-									}
-
-								this.audioReadPosition += 2;
-
-								// WRAP BACK AROUND WITHIN THE RING BUFFER
-								if (this.audioReadPosition == 64000)
-									{
-									this.audioReadPosition = 0;
-									}
-								}
-							}
-
-						// DISCARD REMAINING SAMPLES BEYOND 100MS
-						while (this.audioWritePosition != this.audioReadPosition)
-							{
-							this.audioReadPosition += 2;
 							if (this.audioReadPosition == 64000)
 								{
 								this.audioReadPosition = 0;
 								}
 							}
-
-						// SCHEDULE AUDIO TO PLAY SEAMLESSLY AFTER PREVIOUS CHUNK
-						var currentTime = this.audioContext.currentTime;
-
-						// IF AUDIO IS TOO FAR AHEAD (>150MS LATENCY), RESET TO PREVENT DELAY BUILDUP
-						if (this.nextAudioTime > currentTime + 0.15)
-							{
-							this.nextAudioTime = currentTime;
-							}
-
-						// IF WE'VE FALLEN BEHIND, CATCH UP
-						if (this.nextAudioTime < currentTime)
-							{
-							this.nextAudioTime = currentTime;
-							}
-
-						var source = this.audioContext.createBufferSource();
-						source.buffer = audioBuffer;
-						source.connect(this.gainNode);
-						source.start(this.nextAudioTime);
-
-						// SCHEDULE NEXT CHUNK RIGHT AFTER THIS ONE ENDS
-						this.nextAudioTime += audioBuffer.duration;
 						}
 
-					// CALCULATE REMAINING AUDIO IN BUFFER
-					var audioBufferRemaining = 0;
-					var readPositionTemp = this.audioReadPosition;
-					var writePositionTemp = this.audioWritePosition;
-
-					for (var i = 0; i < 64000; i++)
+					// DISCARD REMAINING SAMPLES BEYOND 100MS
+					while (this.audioWritePosition != this.audioReadPosition)
 						{
-						if (readPositionTemp != writePositionTemp)
+						this.audioReadPosition += 2;
+						if (this.audioReadPosition == 64000)
 							{
-							readPositionTemp += 2;
-							audioBufferRemaining += 2;
-
-							if (readPositionTemp == 64000)
-								{
-								readPositionTemp = 0;
-								}
+							this.audioReadPosition = 0;
 							}
 						}
 
-					this.setRemainingAudio(audioBufferRemaining);
-					this.audioThreadLock = false;
+					// SCHEDULE AUDIO TO PLAY SEAMLESSLY AFTER PREVIOUS CHUNK
+					var currentTime = this.audioContext.currentTime;
+
+					// IF AUDIO IS TOO FAR AHEAD (>150MS LATENCY), RESET TO PREVENT DELAY BUILDUP
+					if (this.nextAudioTime > currentTime + 0.15)
+						{
+						this.nextAudioTime = currentTime;
+						}
+
+					// IF WE'VE FALLEN BEHIND, CATCH UP
+					if (this.nextAudioTime < currentTime)
+						{
+						this.nextAudioTime = currentTime;
+						}
+
+					var source = this.audioContext.createBufferSource();
+					source.buffer = audioBuffer;
+					source.connect(this.gainNode);
+					source.start(this.nextAudioTime);
+
+					// SCHEDULE NEXT CHUNK RIGHT AFTER THIS ONE ENDS
+					this.nextAudioTime += audioBuffer.duration;
 					}
 
-				// WHEN IT RETURNS FROM EMSCRIPTEN
-				SaveStateEvent()
+				// CALCULATE REMAINING AUDIO IN BUFFER
+				var audioBufferRemaining = 0;
+				var readPositionTemp = this.audioReadPosition;
+				var writePositionTemp = this.audioWritePosition;
+
+				for (var i = 0; i < 64000; i++)
 					{
-					var compressed = FS.readFile("/savestate.gz"); // THIS IS A UINT8ARRAY
+					if (readPositionTemp != writePositionTemp)
+						{
+						readPositionTemp += 2;
+						audioBufferRemaining += 2;
 
-					// GETTING THE ROM FILENAME WITHOUT THE EXTENSION
-					var fileName = ROMNAME.replace(/\.[^/.]+$/, "");
-
-					// DOWNLOADING THE ROMSTATE AS A FILE
-					this.download_Blob(compressed, fileName + ".state", "application/octet-stream");
+						if (readPositionTemp == 64000)
+							{
+							readPositionTemp = 0;
+							}
+						}
 					}
 
-				download_Blob(data, fileName, mimeType)
-					{
-					var blob, url;
-					blob = new Blob([data], {type: mimeType});
-					url = window.URL.createObjectURL(blob);
-					this.download_URL(url, fileName);
-					}
+				this.setRemainingAudio(audioBufferRemaining);
+				this.audioThreadLock = false;
+				};
 
-				download_URL(data, fileName)
-					{
-					var a;
-					a = document.createElement("a");
-					a.href = data;
-					a.download = fileName;
-					document.body.appendChild(a);
-					a.style = "display: none";
-					a.click();
-					a.remove();
-					}
-				}
+			// WHEN IT RETURNS FROM EMSCRIPTEN
+			MyClass.prototype.SaveStateEvent = function()
+				{
+				var compressed = FS.readFile("/savestate.gz"); // THIS IS A UINT8ARRAY
+
+				// GETTING THE ROM FILENAME WITHOUT THE EXTENSION
+				var fileName = ROMNAME.replace(/\.[^/.]+$/, "");
+
+				// DOWNLOADING THE ROMSTATE AS A FILE
+				this.download_Blob(compressed, fileName + ".state", "application/octet-stream");
+				};
+
+			MyClass.prototype.download_Blob = function(data, fileName, mimeType)
+				{
+				var blob, url;
+				blob = new Blob([data], {type: mimeType});
+				url = window.URL.createObjectURL(blob);
+				this.download_URL(url, fileName);
+				};
+
+			MyClass.prototype.download_URL = function(data, fileName)
+				{
+				var a;
+				a = document.createElement("a");
+				a.href = data;
+				a.download = fileName;
+				document.body.appendChild(a);
+				a.style = "display: none";
+				a.click();
+				a.remove();
+				};
 
 			function detectEmulatorKey(e)
 				{
