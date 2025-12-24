@@ -1,6 +1,6 @@
 # Nintendo 64
 
-Nintendo 64 Emulator in JavaScript and WebAssembly.
+A Nintendo 64 emulator designed for running in vanilla JavaScript pre-ECMAScript 2015 (no WebAssembly). Simply open the link below, click the red icon, and select a ROM file in `N64` or `Z64` format from your computer; it will be loaded and booted automatically.
 
 ![alt screenshot](https://raw.githubusercontent.com/lrusso/Nintendo64/main/Nintendo64.png)
 
