@@ -17,7 +17,7 @@ A Nintendo 64 emulator designed for running in vanilla JavaScript pre-ECMAScript
 
 ## How to use it:
 
-Examples of loading local and online files can be found [here](https://github.com/lrusso/Nintendo/blob/main/Nintendo.htm#L128-L166) and [here](https://github.com/lrusso/Nintendo/blob/main/Nintendo.htm#L194-L226).
+Examples of loading local and online files can be found [here](https://github.com/lrusso/Nintendo64/blob/main/Nintendo64.htm#L120-L138) and [here](https://github.com/lrusso/Nintendo64/blob/main/Nintendo64.htm#L166-L178).
 
 ```js
 embedNintendo64({
