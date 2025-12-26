@@ -59,10 +59,11 @@ embedNintendo64({
 
 ## Main differences with the original project:
 
-* File format validation.
-* Mute/unmute implementation.
-* Pausing/resuming on blur/focus.
-* Loading and saving states as files.
+* Added logic to toggle sound.
+* Added logic to load and save game state files.
+* Implemented logic for pausing the emulator on blur and resuming on focus.
+* Implemented a workaround that replaced ScriptProcessorNode (deprecated).
+* Migrated the build to code compatible with pre-ECMAScript 2015 environments.
 
 ## Based on the work of:
 
