@@ -186,7 +186,7 @@
             }
 
             if (!isValid) {
-              imageFileInput.value = null
+              romFileInput.value = null
               return
             }
 
@@ -220,6 +220,7 @@
                 },
                 cbStarted: function cbStarted() {
                   pleaseWait.style.display = "none"
+                  romFileInput.value = null
                 },
               })
             }
