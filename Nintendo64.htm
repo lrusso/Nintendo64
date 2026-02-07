@@ -234,6 +234,7 @@
             var KEY_2 = event.code === "Digit2"
             var KEY_3 = event.code === "Digit3"
             var KEY_F = event.code === "KeyF"
+            var KEY_R = event.code === "KeyR"
 
             if (KEY_CTRL && KEY_1) {
               event.preventDefault()
@@ -253,6 +254,13 @@
             if (KEY_CTRL && KEY_F) {
               event.preventDefault()
               requestEmulatorFullscreenNintendo64()
+            }
+
+            if (KEY_CTRL && KEY_R) {
+              if (container.style.display === "none") {
+                event.preventDefault()
+                resetNintendo64()
+              }
             }
           })
         }
