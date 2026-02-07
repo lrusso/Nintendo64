@@ -66,6 +66,7 @@ embedNintendo64({
 | Load state      |  Command + 2   |     Ctrl + 2     |    Ctrl + 2     |
 | Toggle sound    |  Command + 3   |     Ctrl + 3     |    Ctrl + 3     |
 | Fullscreen mode |  Command + F   |     Ctrl + F     |    Ctrl + F     |
+| Reset game      |  Command + R   |     Ctrl + R     |    Ctrl + R     |
 
 ## Main differences with the original project:
 
