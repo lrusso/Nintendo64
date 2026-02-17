@@ -131,7 +131,7 @@
             var xhr = new XMLHttpRequest()
             xhr.open("GET", gameURL, true)
             xhr.responseType = "arraybuffer"
-            xhr.onreadystatechange = function () {
+            xhr.addEventListener("readystatechange", function () {
               if (xhr.readyState === 4 && xhr.status === 200) {
                 embedNintendo64({
                   container: "game",
@@ -162,7 +162,7 @@
                   },
                 })
               }
-            }
+            })
 
             xhr.send(null)
           })
