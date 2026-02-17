@@ -193,7 +193,7 @@
             container.style.display = "none"
 
             var filereader = new FileReader()
-            filereader.onload = function () {
+            filereader.addEventListener("load", function () {
               embedNintendo64({
                 container: "game",
                 name: event.target.files[0].name,
@@ -223,7 +223,7 @@
                   romFileInput.value = null
                 },
               })
-            }
+            })
 
             filereader.readAsArrayBuffer(event.target.files[0])
           })
