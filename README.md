@@ -79,3 +79,5 @@ embedNintendo64({
 ## Based on the work of:
 
 https://github.com/nbarkhina/N64Wasm
+
+**NOTE:** Emscripten 4.0.23 was used to build the emulator.
