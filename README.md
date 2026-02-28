@@ -72,6 +72,7 @@ embedNintendo64({
 
 - Added logic to toggle sound.
 - Added logic to load and save game state files.
+- Removed hardcoded canvas styles when the canvas is created.
 - Implemented logic for pausing the emulator on blur and resuming on focus.
 - Implemented a workaround that replaced ScriptProcessorNode (deprecated).
 - Transpiled JS to pre-ES2015 via `node ConverterES5.js n64wasm.js`.
