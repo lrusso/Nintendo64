@@ -74,7 +74,7 @@ embedNintendo64({
 - Added logic to load and save game state files.
 - Implemented logic for pausing the emulator on blur and resuming on focus.
 - Implemented a workaround that replaced ScriptProcessorNode (deprecated).
-- Migrated the build to code compatible with pre-ECMAScript 2015 environments.
+- Transpiled JS to pre-ES2015 via `node ConverterES5.js n64wasm.js`.
 
 ## Based on the work of:
 
