@@ -320,7 +320,6 @@ e=I;p(q);var ci=c([null,OCa,TAa,Iza,hxa,Pw,Ui,Ui,Ui,Ui,mk,pw,Ui,Ui,Ui,Ui,Ui,vk,V
   }
 
   function embedNintendo64(config) {
-    try {
       // Validate config object (required)
       if (typeof config !== "object") {
         throw new Error("Error. A configuration is required.")
@@ -427,6 +426,7 @@ e=I;p(q);var ci=c([null,OCa,TAa,Iza,hxa,Pw,Ui,Ui,Ui,Ui,mk,pw,Ui,Ui,Ui,Ui,Ui,vk,V
 
       filename = filename.split(".").slice(0, -1).join(".")
 
+    try {
       var myWrapper = document.createElement("div")
       myWrapper.style.width = "100%"
       myWrapper.style.height = "100%"
@@ -448,7 +448,7 @@ e=I;p(q);var ci=c([null,OCa,TAa,Iza,hxa,Pw,Ui,Ui,Ui,Ui,mk,pw,Ui,Ui,Ui,Ui,Ui,vk,V
       Module["canvas"] = myCanvas
 
       // CHECKING IF THE GAME IS STAR WARS EPISODE 1 RACER
-      if (/star.*wars.*racer.*n64/gi.test(config.name)) {
+      if (/star.*wars.*racer/gi.test(filename)) {
         // ADJUSTING CANVAS IN ORDER TO REMOVE THE BLACK BORDERS THAT THE GAME HAS
         myCanvas.style.left = "-3%"
         myCanvas.style.top = "-4%"
@@ -457,7 +457,7 @@ e=I;p(q);var ci=c([null,OCa,TAa,Iza,hxa,Pw,Ui,Ui,Ui,Ui,mk,pw,Ui,Ui,Ui,Ui,Ui,vk,V
       }
 
       globals.window["NINTENDO64_CONTAINER"] = config.container
-      globals.window["NINTENDO64_ROM_NAME"] = config.name
+      globals.window["NINTENDO64_ROM_NAME"] = filename
 
       // WRITING THE ASSETS ZIP FILE
       FS.writeFile(
