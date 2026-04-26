@@ -1,6 +1,6 @@
 # Nintendo 64
 
-A Nintendo 64 emulator designed for running in vanilla JavaScript pre-ECMAScript 2015 (no WebAssembly). Simply open the link below, click the red icon, and select a ROM file in `N64` or `Z64` format from your computer; it will be loaded and booted automatically.
+A Nintendo 64 emulator designed for running in pure JavaScript pre-ECMAScript 2015 (no WebAssembly). Simply open the link below, click the red icon, and select a ROM file in `N64` or `Z64` format from your computer; it will be loaded and booted automatically.
 
 ## Links:
 
